@@ -1,5 +1,7 @@
 """Rich terminal output reporter."""
 
+import io
+
 from rich.console import Console
 from rich.table import Table
 
@@ -21,12 +23,13 @@ class ConsoleReporter(BaseReporter):
         return "console"
 
     def render(self, result: ScanResult) -> str:
-        console = Console(record=True, width=120)
+        buf = io.StringIO()
+        console = Console(file=buf, width=120, force_terminal=True)
         findings = result.sorted_findings()
 
         if not findings:
             console.print("[bold green]No security issues found.[/bold green]")
-            return console.export_text()
+            return buf.getvalue()
 
         table = Table(title=f"supSec scan: {result.target}", show_lines=False, expand=True)
         table.add_column("Severity", width=10)
@@ -57,4 +60,4 @@ class ConsoleReporter(BaseReporter):
         else:
             console.print("[green]PASSED — no blocking issues[/green]")
 
-        return console.export_text()
+        return buf.getvalue()

@@ -1,0 +1,4 @@
+# Example config — this one doesn't ignore anything (for demo purposes)
+ignore_paths: []
+ignore_rules: []
+severity_overrides: {}
