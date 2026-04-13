@@ -21,7 +21,10 @@ class DockerfileScanner(BaseScanner):
 
     def scan(self, path: Path) -> list[Finding]:
         findings: list[Finding] = []
-        lines = path.read_text().splitlines()
+        try:
+            lines = path.read_text(errors="ignore").splitlines()
+        except (OSError, UnicodeDecodeError):
+            return findings
         rel = str(path)
 
         has_user = False

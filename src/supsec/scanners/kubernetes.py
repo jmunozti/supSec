@@ -45,7 +45,7 @@ class KubernetesScanner(BaseScanner):
         findings: list[Finding] = []
         rel = str(path)
         try:
-            docs = list(yaml.safe_load_all(path.read_text()))
+            docs = list(yaml.safe_load_all(path.read_text(errors="ignore")))
         except Exception:
             return findings
 

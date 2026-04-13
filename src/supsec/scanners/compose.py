@@ -20,10 +20,14 @@ class ComposeScanner(BaseScanner):
     def scan(self, path: Path) -> list[Finding]:
         findings: list[Finding] = []
         rel = str(path)
-        lines = path.read_text().splitlines()
+        try:
+            text = path.read_text(errors="ignore")
+        except (OSError, UnicodeDecodeError):
+            return findings
+        lines = text.splitlines()
 
         try:
-            doc = yaml.safe_load(path.read_text())
+            doc = yaml.safe_load(text)
         except yaml.YAMLError:
             return findings
 

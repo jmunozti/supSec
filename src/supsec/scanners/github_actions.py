@@ -23,7 +23,10 @@ class GitHubActionsScanner(BaseScanner):
     def scan(self, path: Path) -> list[Finding]:
         findings: list[Finding] = []
         rel = str(path)
-        text = path.read_text()
+        try:
+            text = path.read_text(errors="ignore")
+        except (OSError, UnicodeDecodeError):
+            return findings
         lines = text.splitlines()
 
         try:
