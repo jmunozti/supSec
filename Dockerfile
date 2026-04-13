@@ -23,5 +23,8 @@ ENV PYTHONPATH=/app/src
 
 USER supsec
 
+HEALTHCHECK --interval=60s --timeout=3s --retries=1 \
+    CMD ["python", "-c", "import supsec; print('ok')"]
+
 ENTRYPOINT ["python", "-m", "supsec.cli"]
 CMD ["scan", "."]
