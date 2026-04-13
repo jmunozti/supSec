@@ -1,66 +1,57 @@
 # supSec
 
-> *"Sup, Sec?" — a DevSecOps scanner that finds security issues in Dockerfiles, CI pipelines, Terraform, and source code.*
+> *"Sup, Sec?" — DevSecOps scanner for Dockerfiles, CI pipelines, Terraform, K8s manifests, Compose files, shell scripts, and secrets.*
 
-A Python CLI tool that scans your infrastructure code for security misconfigurations, hardcoded secrets, and compliance violations. Outputs to console, SARIF (GitHub Security tab), or Markdown (PR comments). Blocks deploys when critical issues are found.
+Scans infrastructure code for security misconfigurations and compliance violations. Blocks deploys when critical issues are found. Outputs to console, SARIF (GitHub Security tab), Markdown, or JSON.
 
-## What it scans
+## Scanners (7) and rules (49)
 
-| Scanner | Files | Example findings |
+| Scanner | Files | Key findings |
 |---|---|---|
-| **Dockerfile** | `Dockerfile`, `Dockerfile.*` | Running as root, secrets in ENV, curl pipe to bash, no HEALTHCHECK, unpinned base images |
-| **GitHub Actions** | `.github/workflows/*.yml` | Missing permissions block, unpinned actions, hardcoded secrets, `pull_request_target` pwn vector |
-| **Terraform** | `*.tf` | Unencrypted S3, public RDS, 0.0.0.0/0 security groups, hardcoded credentials, no KMS rotation |
-| **Secrets** | All text files | AWS keys (AKIA...), GitHub PATs, OpenAI keys, Stripe keys, private key headers, high-entropy strings |
+| **Dockerfile** | `Dockerfile*` | Root user, secrets in ENV, curl\|bash, no HEALTHCHECK, unpinned images |
+| **GitHub Actions** | `.github/workflows/*.yml` | Missing permissions, unpinned actions, hardcoded secrets, pwn request vector |
+| **Terraform** | `*.tf` | Unencrypted S3, public RDS, open SGs, hardcoded creds, no KMS rotation |
+| **Kubernetes** | K8s manifests | Privileged containers, no securityContext, no resource limits, no readOnlyRootFilesystem |
+| **Docker Compose** | `docker-compose.yml` | Privileged, host network, docker.sock mount, secrets in environment |
+| **Shell** | `*.sh`, `*.bash` | eval, curl\|bash, unquoted rm, chmod 777, missing set -euo pipefail |
+| **Secrets** | All text files | AWS keys, GitHub PATs, OpenAI keys, Stripe keys, private keys, high-entropy strings |
 
-Every rule maps to industry compliance frameworks: **CIS Benchmarks, PCI-DSS, HIPAA, SOC2, NIST 800-53, OWASP, SLSA**.
+Every rule maps to compliance frameworks: **CIS Benchmarks, PCI-DSS, HIPAA, SOC2, NIST, OWASP, SLSA**.
 
 ## Quick start
 
 ```bash
-# Install (requires uv: curl -LsSf https://astral.sh/uv/install.sh | sh)
 git clone https://github.com/jmunozti/supSec.git && cd supSec
 uv sync
 
-# Scan a project
-uv run supsec scan /path/to/your/project
-
-# Scan with SARIF output (for GitHub Security tab)
-uv run supsec scan . --fmt sarif -o report.sarif
-
-# Scan only Dockerfiles
-uv run supsec scan . --scanners dockerfile
-
-# Fail CI on high+ severity (exit code 1)
-uv run supsec scan . --fail-on high
-
-# Install as git pre-commit hook
-uv run supsec install-hook
+uv run supsec scan /path/to/project          # scan a project
+uv run supsec scan . --scanners kubernetes    # only one scanner
+uv run supsec scan . --fmt sarif -o out.sarif # SARIF for GitHub Security tab
+uv run supsec scan . --fmt json | jq          # JSON for scripting
+uv run supsec scan . --changed-only           # only git-changed files
+uv run supsec scan . --fail-on high           # exit 1 on high+ severity
+uv run supsec fix . --dry-run                 # preview auto-fixes
+uv run supsec fix .                           # apply fixes
+uv run supsec install-hook                    # git pre-commit hook
 ```
 
-## Demo: scanning vulnerable vs clean code
+## Demo
 
 ```bash
-# Scan intentionally vulnerable examples
-$ supsec scan examples/vulnerable
+$ uv run supsec scan examples/vulnerable
 
-┌────────────┬──────────────────────────┬────────────┬─────────────────────────────┐
-│ Severity   │ File:Line                │ Rule       │ Message                     │
-├────────────┼──────────────────────────┼────────────┼─────────────────────────────┤
-│ CRITICAL   │ main.tf:15               │ TF-003     │ RDS instance is publicly... │
-│ CRITICAL   │ main.tf:17               │ TF-004     │ Hardcoded credential in...  │
-│ CRITICAL   │ Dockerfile:4             │ DOCKER-006 │ Secret value exposed in...  │
-│ HIGH       │ Dockerfile:1             │ DOCKER-010 │ No USER instruction         │
-│ HIGH       │ main.tf:9                │ TF-002     │ Security group allows 0.0.0.│
-│ ...        │                          │            │                             │
-└────────────┴──────────────────────────┴────────────┴─────────────────────────────┘
+ CRITICAL  main.tf:19         TF-003      RDS instance is publicly accessible
+ CRITICAL  main.tf:20         TF-004      Hardcoded credential in Terraform
+ CRITICAL  Dockerfile:5       DOCKER-006  Secret in ENV instruction
+ CRITICAL  deploy.yaml:19     K8S-003     Privileged container
+ HIGH      docker-compose:5   COMPOSE-001 Privileged container in Compose
+ HIGH      deploy.sh:4        SHELL-005   Hardcoded credential in shell script
+ ...
 
-15 findings (3 critical, 5 high, 4 medium, 2 low, 1 info)
-BLOCKED — critical or high severity issues must be fixed
+54 findings (10 critical, 21 high, 15 medium, 4 low, 4 info)
+BLOCKED
 
-# Scan clean examples
-$ supsec scan examples/clean
-
+$ uv run supsec scan examples/clean
 No security issues found.
 ```
 
@@ -69,103 +60,57 @@ No security issues found.
 ```mermaid
 flowchart TD
     CLI[supsec CLI] --> Engine[ScanEngine]
-    Engine --> DS[DockerfileScanner]
-    Engine --> GS[GitHubActionsScanner]
-    Engine --> TS[TerraformScanner]
-    Engine --> SS[SecretsScanner]
-
-    DS --> |findings| Result[ScanResult]
-    GS --> |findings| Result
-    TS --> |findings| Result
-    SS --> |findings| Result
-
-    Result --> CR[ConsoleReporter]
-    Result --> SR[SARIFReporter]
-    Result --> MR[MarkdownReporter]
-
-    subgraph "OOP: Plugin Architecture"
-        DS
-        GS
-        TS
-        SS
-    end
-
-    subgraph "OOP: Strategy Pattern"
-        CR
-        SR
-        MR
-    end
+    Engine --> |"Plugin ABC"| S1[DockerfileScanner]
+    Engine --> S2[GitHubActionsScanner]
+    Engine --> S3[TerraformScanner]
+    Engine --> S4[SecretsScanner]
+    Engine --> S5[KubernetesScanner]
+    Engine --> S6[ComposeScanner]
+    Engine --> S7[ShellScanner]
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> Result[ScanResult]
+    Result --> |"Strategy"| R1[Console]
+    Result --> R2[SARIF]
+    Result --> R3[Markdown]
+    Result --> R4[JSON]
+    Config[.supsec.yaml] -.-> Engine
+    CLI --> Fixer[AutoFixer]
 ```
 
-**OOP patterns used:**
-- **Abstract Base Class** — `BaseScanner` and `BaseReporter` define the interface; scanners/reporters are plugins
-- **Strategy Pattern** — reporters are interchangeable output strategies selected at runtime
-- **Factory** — `get_all_scanners()` and `REPORTERS` registry instantiate the right objects
-- **Data Classes** — `Finding`, `ScanResult`, `RuleMetadata` are immutable data carriers
+**OOP patterns:** Abstract Base Class (plugin scanners/reporters), Strategy (output format), Factory/Registry, Template Method (`scan_tree`), Data Classes.
 
-## Compliance frameworks covered
-
-| Framework | Rules mapped |
-|---|---|
-| **CIS Docker Benchmark** | DOCKER-001 through DOCKER-011 |
-| **CIS AWS Foundations** | TF-001, TF-002, TF-003, TF-006, TF-008, TF-010 |
-| **PCI-DSS** | DOCKER-006, GHA-003, TF-001, TF-002, TF-003, TF-004, TF-008, SEC-001, SEC-002 |
-| **SOC2 (CC6.1, CC7.2)** | DOCKER-006, TF-004, TF-005, TF-009, TF-010 |
-| **HIPAA (164.312)** | TF-001, TF-007 |
-| **NIST 800-53** | DOCKER-004, TF-002, TF-008 |
-| **NIST 800-190** | DOCKER-001, DOCKER-008, DOCKER-010 |
-| **OWASP CI/CD Top 10** | GHA-001, GHA-003, GHA-007 |
-| **OWASP Supply Chain** | DOCKER-005, GHA-002, GHA-004 |
-| **SLSA** | DOCKER-005, DOCKER-008, DOCKER-009, GHA-002 |
-
-## CI/CD integration
-
-### GitHub Actions
+## Config (`.supsec.yaml`)
 
 ```yaml
-- name: Install uv
-  uses: astral-sh/setup-uv@v4
+ignore_paths: [vendor/, "*.min.js"]
+ignore_rules: [DOCKER-011]
+severity_overrides:
+  DOCKER-011: HIGH
+scanners: [dockerfile, terraform, secrets]
+```
 
-- name: supSec scan
-  run: |
+## CI/CD
+
+```yaml
+# GitHub Actions
+- uses: astral-sh/setup-uv@v4
+- run: |
     uv sync
     uv run supsec scan . --fmt sarif -o supsec.sarif --fail-on high
-
-- name: Upload SARIF
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: supsec.sarif
-```
-
-### Pre-commit hook
-
-```bash
-supsec install-hook
-# or
-make hook
-```
-
-Blocks commits containing critical/high severity findings.
-
-## Development
-
-```bash
-make install     # Install deps (uv sync)
-make test        # Run 74 tests
-make lint        # Ruff lint
-make fmt         # Auto-format
-make scan        # Scan this repo with itself
+- uses: github/codeql-action/upload-sarif@v3
+  with: { sarif_file: supsec.sarif }
 ```
 
 ## Tech stack
 
-- **Python 3.12** — Typer CLI, Rich terminal output, PyYAML, Pydantic
-- **uv** — package manager (replaces pip + poetry + virtualenv)
-- **OOP** — ABC plugin system for scanners and reporters
-- **SARIF 2.1.0** — GitHub Security tab integration
-- **74 unit tests** — pytest, fixtures, parametrized
-- **Ruff** — linting and formatting
-- **GitHub Actions** — CI with self-scan (supSec scans its own repo)
+| | |
+|---|---|
+| Python 3.12 | Typer CLI, Rich, PyYAML, Pydantic |
+| uv | Package manager |
+| OOP | ABC plugin system (7 scanners, 4 reporters) |
+| 120 tests | pytest |
+| Ruff | Lint + format |
+| SARIF 2.1.0 | GitHub Security tab compatible |
+| GitHub Actions | CI with self-scan |
 
 ## License
 
