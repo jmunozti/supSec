@@ -20,6 +20,7 @@ def scan_sh(tmp_path, scanner):
         p = tmp_path / "script.sh"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 
@@ -39,7 +40,7 @@ class TestAccepts:
 
 class TestEval:
     def test_detects_eval(self, scan_sh):
-        findings = scan_sh("#!/bin/bash\nset -euo pipefail\neval \"$INPUT\"\n")
+        findings = scan_sh('#!/bin/bash\nset -euo pipefail\neval "$INPUT"\n')
         assert any(f.rule_id == "SHELL-001" for f in findings)
 
 

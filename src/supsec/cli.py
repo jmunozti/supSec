@@ -35,11 +35,17 @@ def _get_changed_files(target: Path) -> list[Path]:
     try:
         result = subprocess.run(
             ["git", "diff", "--name-only", "--diff-filter=ACMRT", "HEAD"],
-            capture_output=True, text=True, timeout=10, cwd=target,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=target,
         )
         untracked = subprocess.run(
             ["git", "ls-files", "--others", "--exclude-standard"],
-            capture_output=True, text=True, timeout=10, cwd=target,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=target,
         )
         files = set(result.stdout.strip().splitlines() + untracked.stdout.strip().splitlines())
         return [target / f for f in files if f]
@@ -50,12 +56,20 @@ def _get_changed_files(target: Path) -> list[Path]:
 @app.command()
 def scan(
     target: Path = typer.Argument(".", help="Directory or file to scan"),
-    output_format: str = typer.Option("console", "--fmt", "-f", help="Output format: console, sarif, markdown, json"),
+    output_format: str = typer.Option(
+        "console", "--fmt", "-f", help="Output format: console, sarif, markdown, json"
+    ),
     output: Path | None = typer.Option(None, "--output", "-o", help="Write report to file"),
-    scanners: str | None = typer.Option(None, "--scanners", "-s", help="Comma-separated scanner names"),
-    fail_on: str = typer.Option("high", "--fail-on", help="Exit 1 if findings at this severity or above"),
+    scanners: str | None = typer.Option(
+        None, "--scanners", "-s", help="Comma-separated scanner names"
+    ),
+    fail_on: str = typer.Option(
+        "high", "--fail-on", help="Exit 1 if findings at this severity or above"
+    ),
     changed_only: bool = typer.Option(False, "--changed-only", help="Only scan git-changed files"),
-    config_file: Path | None = typer.Option(None, "--config", "-c", help="Path to .supsec.yaml config"),
+    config_file: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to .supsec.yaml config"
+    ),
 ) -> None:
     """Scan a directory for security issues."""
     if not target.exists():
@@ -74,7 +88,9 @@ def scan(
 
     reporter_cls = REPORTERS.get(output_format)
     if not reporter_cls:
-        console.print(f"[red]Unknown format: {output_format}. Available: {', '.join(REPORTERS)}[/red]")
+        console.print(
+            f"[red]Unknown format: {output_format}. Available: {', '.join(REPORTERS)}[/red]"
+        )
         sys.exit(1)
 
     reporter = reporter_cls()
@@ -96,7 +112,9 @@ def scan(
 @app.command()
 def fix(
     target: Path = typer.Argument(".", help="Directory to auto-fix"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be fixed without modifying files"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be fixed without modifying files"
+    ),
 ) -> None:
     """Auto-fix simple security issues (Dockerfiles, CI configs)."""
     from supsec.fixer import AutoFixer

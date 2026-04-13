@@ -31,34 +31,44 @@ class SARIFReporter(BaseReporter):
                     "helpUri": f.reference or "",
                     "properties": {"scanner": f.scanner},
                 }
-            results.append({
-                "ruleId": f.rule_id,
-                "level": SARIF_SEVERITY_MAP.get(f.severity, "note"),
-                "message": {"text": f.message},
-                "locations": [{
-                    "physicalLocation": {
-                        "artifactLocation": {"uri": f.file},
-                        "region": {"startLine": f.line},
-                    }
-                }],
-                "fixes": [{
-                    "description": {"text": f.remediation},
-                }] if f.remediation else [],
-            })
+            results.append(
+                {
+                    "ruleId": f.rule_id,
+                    "level": SARIF_SEVERITY_MAP.get(f.severity, "note"),
+                    "message": {"text": f.message},
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {"uri": f.file},
+                                "region": {"startLine": f.line},
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {"text": f.remediation},
+                        }
+                    ]
+                    if f.remediation
+                    else [],
+                }
+            )
 
         sarif = {
             "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
             "version": "2.1.0",
-            "runs": [{
-                "tool": {
-                    "driver": {
-                        "name": "supSec",
-                        "version": "0.1.0",
-                        "informationUri": "https://github.com/jmunozti/supSec",
-                        "rules": list(rules.values()),
-                    }
-                },
-                "results": results,
-            }],
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                            "name": "supSec",
+                            "version": "0.1.0",
+                            "informationUri": "https://github.com/jmunozti/supSec",
+                            "rules": list(rules.values()),
+                        }
+                    },
+                    "results": results,
+                }
+            ],
         }
         return json.dumps(sarif, indent=2)

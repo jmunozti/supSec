@@ -49,25 +49,37 @@ class AutoFixer:
 
             # FIX: apt-get without --no-install-recommends
             if "apt-get install" in stripped and "--no-install-recommends" not in stripped:
-                lines[i] = line.replace("apt-get install", "apt-get install --no-install-recommends")
-                fixes.append(FixResult(str(path), i + 1, "DOCKER-002", "Added --no-install-recommends"))
+                lines[i] = line.replace(
+                    "apt-get install", "apt-get install --no-install-recommends"
+                )
+                fixes.append(
+                    FixResult(str(path), i + 1, "DOCKER-002", "Added --no-install-recommends")
+                )
                 modified = True
 
             # FIX: ADD → COPY (when not using tar/URL features)
             upper = stripped.upper()
-            if upper.startswith("ADD ") and not any(x in stripped for x in ["http://", "https://", ".tar", ".gz"]):
+            if upper.startswith("ADD ") and not any(
+                x in stripped for x in ["http://", "https://", ".tar", ".gz"]
+            ):
                 lines[i] = re.sub(r"^(\s*)ADD\b", r"\1COPY", line)
                 fixes.append(FixResult(str(path), i + 1, "DOCKER-003", "Changed ADD to COPY"))
                 modified = True
 
         # FIX: Add USER if missing
-        has_user = any(ln.strip().upper().startswith("USER ") and "root" not in ln.lower() for ln in lines)
+        has_user = any(
+            ln.strip().upper().startswith("USER ") and "root" not in ln.lower() for ln in lines
+        )
         has_cmd = any(ln.strip().upper().startswith(("CMD ", "ENTRYPOINT ")) for ln in lines)
         if not has_user and has_cmd:
             for i in range(len(lines) - 1, -1, -1):
-                if lines[i].strip().upper().startswith("CMD ") or lines[i].strip().upper().startswith("ENTRYPOINT "):
+                if lines[i].strip().upper().startswith("CMD ") or lines[
+                    i
+                ].strip().upper().startswith("ENTRYPOINT "):
                     lines.insert(i, "USER 10001\n")
-                    fixes.append(FixResult(str(path), i + 1, "DOCKER-010", "Added USER 10001 before CMD"))
+                    fixes.append(
+                        FixResult(str(path), i + 1, "DOCKER-010", "Added USER 10001 before CMD")
+                    )
                     modified = True
                     break
 
@@ -89,7 +101,9 @@ class AutoFixer:
             # Insert after shebang
             insert_idx = 1 if lines[0].startswith("#!") else 0
             lines.insert(insert_idx, "set -euo pipefail\n")
-            fixes.append(FixResult(str(path), insert_idx + 1, "SHELL-008", "Added set -euo pipefail"))
+            fixes.append(
+                FixResult(str(path), insert_idx + 1, "SHELL-008", "Added set -euo pipefail")
+            )
             if not self.dry_run:
                 path.write_text("".join(lines))
 

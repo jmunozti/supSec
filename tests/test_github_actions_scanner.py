@@ -22,6 +22,7 @@ def scan_workflow(tmp_path, scanner):
         p = d / "ci.yml"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 

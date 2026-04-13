@@ -56,7 +56,9 @@ class ConsoleReporter(BaseReporter):
         console.print(f"[bold]{len(findings)} findings[/bold] ({', '.join(summary_parts)})")
 
         if result.has_blockers:
-            console.print("[bold red]BLOCKED — critical or high severity issues must be fixed[/bold red]")
+            console.print(
+                "[bold red]BLOCKED — critical or high severity issues must be fixed[/bold red]"
+            )
         else:
             console.print("[green]PASSED — no blocking issues[/green]")
 

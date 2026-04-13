@@ -15,6 +15,7 @@ def write_config(tmp_path):
         p = tmp_path / ".supsec.yaml"
         p.write_text(textwrap.dedent(content))
         return p
+
     return _write
 
 
@@ -25,33 +26,41 @@ class TestLoadConfig:
         assert cfg.ignore_rules == []
 
     def test_loads_ignore_paths(self, write_config):
-        cfg = load_config(write_config("""\
+        cfg = load_config(
+            write_config("""\
             ignore_paths:
               - vendor/
               - "*.min.js"
-        """))
+        """)
+        )
         assert "vendor/" in cfg.ignore_paths
 
     def test_loads_ignore_rules(self, write_config):
-        cfg = load_config(write_config("""\
+        cfg = load_config(
+            write_config("""\
             ignore_rules:
               - DOCKER-011
-        """))
+        """)
+        )
         assert "DOCKER-011" in cfg.ignore_rules
 
     def test_loads_severity_overrides(self, write_config):
-        cfg = load_config(write_config("""\
+        cfg = load_config(
+            write_config("""\
             severity_overrides:
               DOCKER-011: HIGH
-        """))
+        """)
+        )
         assert cfg.get_severity_override("DOCKER-011") == Severity.HIGH
 
     def test_loads_scanner_filter(self, write_config):
-        cfg = load_config(write_config("""\
+        cfg = load_config(
+            write_config("""\
             scanners:
               - dockerfile
               - secrets
-        """))
+        """)
+        )
         assert cfg.scanners == ["dockerfile", "secrets"]
 
 

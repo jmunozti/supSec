@@ -19,6 +19,7 @@ def scan_k8s(tmp_path, scanner):
         p = tmp_path / "deploy.yaml"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 

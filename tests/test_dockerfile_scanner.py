@@ -17,10 +17,12 @@ def scanner():
 @pytest.fixture
 def scan_text(tmp_path, scanner):
     """Helper: write Dockerfile content to a temp file and scan it."""
+
     def _scan(content: str):
         p = tmp_path / "Dockerfile"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 
@@ -50,27 +52,37 @@ class TestRootUser:
 
 class TestAptGet:
     def test_detects_missing_no_install_recommends(self, scan_text):
-        findings = scan_text("FROM ubuntu:22.04\nRUN apt-get install -y curl\nUSER app\nHEALTHCHECK CMD true\n")
+        findings = scan_text(
+            "FROM ubuntu:22.04\nRUN apt-get install -y curl\nUSER app\nHEALTHCHECK CMD true\n"
+        )
         assert any(f.rule_id == "DOCKER-002" for f in findings)
 
     def test_passes_with_flag(self, scan_text):
-        findings = scan_text("FROM ubuntu:22.04\nRUN apt-get install -y --no-install-recommends curl\nUSER app\nHEALTHCHECK CMD true\n")
+        findings = scan_text(
+            "FROM ubuntu:22.04\nRUN apt-get install -y --no-install-recommends curl\nUSER app\nHEALTHCHECK CMD true\n"
+        )
         assert not any(f.rule_id == "DOCKER-002" for f in findings)
 
 
 class TestCurlPipe:
     def test_detects_curl_pipe_bash(self, scan_text):
-        findings = scan_text("FROM ubuntu:22.04\nRUN curl -sSL https://x.com/install.sh | bash\nUSER app\nHEALTHCHECK CMD true\n")
+        findings = scan_text(
+            "FROM ubuntu:22.04\nRUN curl -sSL https://x.com/install.sh | bash\nUSER app\nHEALTHCHECK CMD true\n"
+        )
         assert any(f.rule_id == "DOCKER-005" for f in findings)
 
     def test_detects_wget_pipe_sh(self, scan_text):
-        findings = scan_text("FROM ubuntu:22.04\nRUN wget -O- https://x.com/install.sh | sh\nUSER app\nHEALTHCHECK CMD true\n")
+        findings = scan_text(
+            "FROM ubuntu:22.04\nRUN wget -O- https://x.com/install.sh | sh\nUSER app\nHEALTHCHECK CMD true\n"
+        )
         assert any(f.rule_id == "DOCKER-005" for f in findings)
 
 
 class TestSecretInEnv:
     def test_detects_api_key_in_env(self, scan_text):
-        findings = scan_text('FROM python:3.12\nENV API_KEY="sk-1234"\nUSER app\nHEALTHCHECK CMD true\n')
+        findings = scan_text(
+            'FROM python:3.12\nENV API_KEY="sk-1234"\nUSER app\nHEALTHCHECK CMD true\n'
+        )
         assert any(f.rule_id == "DOCKER-006" for f in findings)
         assert any(f.severity == Severity.CRITICAL for f in findings if f.rule_id == "DOCKER-006")
 

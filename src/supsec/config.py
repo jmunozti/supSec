@@ -36,6 +36,7 @@ class SupSecConfig:
 
     def is_path_ignored(self, path: str) -> bool:
         from fnmatch import fnmatch
+
         for pattern in self.ignore_paths:
             if fnmatch(path, pattern) or pattern in path:
                 return True

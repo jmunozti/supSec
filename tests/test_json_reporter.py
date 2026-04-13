@@ -8,9 +8,12 @@ from supsec.reporters.json_reporter import JSONReporter
 
 class TestJSONReporter:
     def test_valid_json(self):
-        result = ScanResult(target="./test", findings=[
-            Finding("TEST-001", Severity.HIGH, "file.py", 1, "msg", "fix", "test"),
-        ])
+        result = ScanResult(
+            target="./test",
+            findings=[
+                Finding("TEST-001", Severity.HIGH, "file.py", 1, "msg", "fix", "test"),
+            ],
+        )
         output = JSONReporter().render(result)
         data = json.loads(output)
         assert data["total"] == 1

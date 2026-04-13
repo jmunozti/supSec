@@ -15,9 +15,33 @@ def sample_result():
     return ScanResult(
         target="./test",
         findings=[
-            Finding("DOCKER-001", Severity.HIGH, "Dockerfile", 3, "Runs as root", "Add USER app", "dockerfile"),
-            Finding("SEC-001", Severity.CRITICAL, "config.py", 10, "AWS key detected", "Rotate and remove", "secrets"),
-            Finding("TF-002", Severity.HIGH, "main.tf", 5, "Open security group", "Restrict CIDR", "terraform"),
+            Finding(
+                "DOCKER-001",
+                Severity.HIGH,
+                "Dockerfile",
+                3,
+                "Runs as root",
+                "Add USER app",
+                "dockerfile",
+            ),
+            Finding(
+                "SEC-001",
+                Severity.CRITICAL,
+                "config.py",
+                10,
+                "AWS key detected",
+                "Rotate and remove",
+                "secrets",
+            ),
+            Finding(
+                "TF-002",
+                Severity.HIGH,
+                "main.tf",
+                5,
+                "Open security group",
+                "Restrict CIDR",
+                "terraform",
+            ),
         ],
     )
 

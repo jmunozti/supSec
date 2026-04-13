@@ -15,13 +15,22 @@ class TestRulesCatalog:
     def test_docker_rules_reference_cis(self):
         docker_rules = {k: v for k, v in RULES_CATALOG.items() if k.startswith("DOCKER-")}
         for rule_id, meta in docker_rules.items():
-            assert any("CIS" in f for f in meta.frameworks), f"{rule_id} should reference CIS Docker Benchmark"
+            assert any("CIS" in f for f in meta.frameworks), (
+                f"{rule_id} should reference CIS Docker Benchmark"
+            )
 
     def test_tf_rules_reference_cis_or_pci(self):
         tf_rules = {k: v for k, v in RULES_CATALOG.items() if k.startswith("TF-")}
         for rule_id, meta in tf_rules.items():
-            assert any("CIS" in f or "PCI" in f or "SOC2" in f or "NIST" in f or "HIPAA" in f or "SLSA" in f
-                       for f in meta.frameworks), f"{rule_id} should reference a compliance framework"
+            assert any(
+                "CIS" in f
+                or "PCI" in f
+                or "SOC2" in f
+                or "NIST" in f
+                or "HIPAA" in f
+                or "SLSA" in f
+                for f in meta.frameworks
+            ), f"{rule_id} should reference a compliance framework"
 
     def test_secret_rules_reference_pci(self):
         sec_rules = {k: v for k, v in RULES_CATALOG.items() if k.startswith("SEC-")}

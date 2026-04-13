@@ -19,6 +19,7 @@ def scan_file(tmp_path, scanner):
         p = tmp_path / filename
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 
@@ -40,7 +41,9 @@ class TestAWSKeys:
         assert any(f.rule_id == "SEC-001" and "AWS Access Key" in f.message for f in findings)
 
     def test_detects_aws_secret_key(self, scan_file):
-        findings = scan_file("config.py", 'aws_secret_access_key = "wJalrXUtnFEMIK7MDENGbPxRfiCYPRODKEYVALUE"\n')
+        findings = scan_file(
+            "config.py", 'aws_secret_access_key = "wJalrXUtnFEMIK7MDENGbPxRfiCYPRODKEYVALUE"\n'
+        )
         assert any(f.rule_id == "SEC-001" for f in findings)
 
     def test_skips_example_keys(self, scan_file):
@@ -51,17 +54,17 @@ class TestAWSKeys:
 
 class TestGitHubTokens:
     def test_detects_github_pat(self, scan_file):
-        findings = scan_file("script.sh", 'TOKEN=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij\n')
+        findings = scan_file("script.sh", "TOKEN=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij\n")
         assert any(f.rule_id == "SEC-001" and "GitHub Token" in f.message for f in findings)
 
     def test_detects_fine_grained_pat(self, scan_file):
-        findings = scan_file("script.sh", 'TOKEN=github_pat_ABCDEFGHIJKLMNOPQRSTUV\n')
+        findings = scan_file("script.sh", "TOKEN=github_pat_ABCDEFGHIJKLMNOPQRSTUV\n")
         assert any("GitHub PAT" in f.message for f in findings)
 
 
 class TestOpenAIKey:
     def test_detects_openai_key(self, scan_file):
-        findings = scan_file(".env", 'OPENAI_API_KEY=sk-proj1234567890abcdef1234567890abcdef\n')
+        findings = scan_file(".env", "OPENAI_API_KEY=sk-proj1234567890abcdef1234567890abcdef\n")
         assert any("OpenAI" in f.message for f in findings)
 
 
@@ -97,7 +100,9 @@ class TestSkips:
 
 class TestCleanFile:
     def test_clean_python_file_no_findings(self, scan_file):
-        findings = scan_file("app.py", """\
+        findings = scan_file(
+            "app.py",
+            """\
             import os
 
             API_KEY = os.environ["API_KEY"]
@@ -108,5 +113,6 @@ class TestCleanFile:
 
             if __name__ == "__main__":
                 main()
-        """)
+        """,
+        )
         assert len(findings) == 0

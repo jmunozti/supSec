@@ -20,6 +20,7 @@ def scan_compose(tmp_path, scanner):
         p = tmp_path / "docker-compose.yml"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 

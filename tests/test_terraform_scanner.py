@@ -19,6 +19,7 @@ def scan_tf(tmp_path, scanner):
         p = tmp_path / "main.tf"
         p.write_text(textwrap.dedent(content))
         return scanner.scan(p)
+
     return _scan
 
 
