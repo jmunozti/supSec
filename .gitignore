@@ -17,3 +17,5 @@ build/
 .DS_Store
 poetry.lock
 uv.lock
+*.sarif
+supsec-report.*
