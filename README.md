@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/supsec.png" alt="supSec" width="320">
+</p>
+
 # supSec
 
 > *"Sup, Sec?" — DevSecOps scanner for Dockerfiles, CI pipelines, Terraform, K8s manifests, Compose files, shell scripts, and secrets.*
