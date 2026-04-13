@@ -22,6 +22,8 @@ Scans infrastructure code for security misconfigurations and compliance violatio
 
 Every rule maps to compliance frameworks: **CIS Benchmarks, PCI-DSS, HIPAA, SOC2, NIST, OWASP, SLSA**.
 
+![supSec scanning vulnerable examples](docs/demo.png)
+
 ## Quick start
 
 ```bash
