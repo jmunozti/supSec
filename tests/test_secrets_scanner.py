@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from supsec.models import Severity
 from supsec.scanners.secrets import SecretsScanner, _shannon_entropy
 
 

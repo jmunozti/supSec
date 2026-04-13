@@ -1,28 +1,28 @@
 .PHONY: install test lint fmt scan scan-sarif scan-vulnerable hook clean
 
 install: ## Install dependencies
-	poetry install --no-interaction
+	uv sync
 
 test: ## Run all tests
-	poetry run pytest -v
+	uv run pytest -v
 
 lint: ## Lint source and tests
-	poetry run ruff check src/ tests/
+	uv run ruff check src/ tests/
 
 fmt: ## Auto-format code
-	poetry run ruff format src/ tests/
+	uv run ruff format src/ tests/
 
 scan: ## Scan current directory
-	poetry run supsec scan .
+	uv run supsec scan .
 
 scan-sarif: ## Scan and output SARIF (GitHub Security tab compatible)
-	poetry run supsec scan . --format sarif -o supsec-report.sarif
+	uv run supsec scan . --fmt sarif -o supsec-report.sarif
 
 scan-vulnerable: ## Scan the intentionally vulnerable examples
-	poetry run supsec scan examples/vulnerable --format console
+	uv run supsec scan examples/vulnerable
 
 scan-clean: ## Scan the clean examples (should pass)
-	poetry run supsec scan examples/clean --format console
+	uv run supsec scan examples/clean
 
 hook: ## Install git pre-commit hook
 	chmod +x scripts/install-hook.sh && ./scripts/install-hook.sh

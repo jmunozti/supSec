@@ -20,20 +20,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        run: pipx install poetry==1.8.3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Install dependencies
-        run: poetry install --no-interaction
+        run: uv sync
 
       - name: Lint
-        run: poetry run ruff check src/ tests/
+        run: uv run ruff check src/ tests/
 
       - name: Format check
-        run: poetry run ruff format --check src/ tests/
+        run: uv run ruff format --check src/ tests/
 
       - name: Tests
-        run: poetry run pytest -v --tb=short
+        run: uv run pytest -v --tb=short
 
   self-scan:
     name: supSec scans itself
@@ -46,17 +46,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        run: pipx install poetry==1.8.3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Install
-        run: poetry install --no-interaction
+        run: uv sync
 
       - name: Run supSec on this repo
         run: |
-          poetry run supsec scan . --format console --fail-on critical
-          poetry run supsec scan . --format sarif -o supsec-report.sarif
-          poetry run supsec scan . --format markdown -o supsec-report.md
+          uv run supsec scan . --fail-on critical
+          uv run supsec scan . --fmt sarif -o supsec-report.sarif
+          uv run supsec scan . --fmt markdown -o supsec-report.md
 
       - name: Upload SARIF
         if: always()

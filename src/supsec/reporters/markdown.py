@@ -19,7 +19,7 @@ class MarkdownReporter(BaseReporter):
 
     def render(self, result: ScanResult) -> str:
         findings = result.sorted_findings()
-        lines = [f"# supSec Scan Report\n", f"**Target:** `{result.target}`\n"]
+        lines = ["# supSec Scan Report\n", f"**Target:** `{result.target}`\n"]
 
         if not findings:
             lines.append("**Result:** No security issues found.\n")

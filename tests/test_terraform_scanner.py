@@ -1,7 +1,6 @@
 """Tests for TerraformScanner."""
 
 import textwrap
-from pathlib import Path
 
 import pytest
 

@@ -18,24 +18,24 @@ Every rule maps to industry compliance frameworks: **CIS Benchmarks, PCI-DSS, HI
 ## Quick start
 
 ```bash
-# Install
+# Install (requires uv: curl -LsSf https://astral.sh/uv/install.sh | sh)
 git clone https://github.com/jmunozti/supSec.git && cd supSec
-make install
+uv sync
 
 # Scan a project
-supsec scan /path/to/your/project
+uv run supsec scan /path/to/your/project
 
 # Scan with SARIF output (for GitHub Security tab)
-supsec scan . --format sarif -o report.sarif
+uv run supsec scan . --fmt sarif -o report.sarif
 
 # Scan only Dockerfiles
-supsec scan . --scanners dockerfile
+uv run supsec scan . --scanners dockerfile
 
 # Fail CI on high+ severity (exit code 1)
-supsec scan . --fail-on high
+uv run supsec scan . --fail-on high
 
 # Install as git pre-commit hook
-supsec install-hook
+uv run supsec install-hook
 ```
 
 ## Demo: scanning vulnerable vs clean code
@@ -123,10 +123,13 @@ flowchart TD
 ### GitHub Actions
 
 ```yaml
+- name: Install uv
+  uses: astral-sh/setup-uv@v4
+
 - name: supSec scan
   run: |
-    pip install -e .
-    supsec scan . --format sarif -o supsec.sarif --fail-on high
+    uv sync
+    uv run supsec scan . --fmt sarif -o supsec.sarif --fail-on high
 
 - name: Upload SARIF
   uses: github/codeql-action/upload-sarif@v3
@@ -147,8 +150,8 @@ Blocks commits containing critical/high severity findings.
 ## Development
 
 ```bash
-make install     # Install deps
-make test        # Run tests (60+ tests)
+make install     # Install deps (uv sync)
+make test        # Run 74 tests
 make lint        # Ruff lint
 make fmt         # Auto-format
 make scan        # Scan this repo with itself
@@ -157,9 +160,10 @@ make scan        # Scan this repo with itself
 ## Tech stack
 
 - **Python 3.12** — Typer CLI, Rich terminal output, PyYAML, Pydantic
+- **uv** — package manager (replaces pip + poetry + virtualenv)
 - **OOP** — ABC plugin system for scanners and reporters
 - **SARIF 2.1.0** — GitHub Security tab integration
-- **60+ unit tests** — pytest, fixtures, parametrized
+- **74 unit tests** — pytest, fixtures, parametrized
 - **Ruff** — linting and formatting
 - **GitHub Actions** — CI with self-scan (supSec scans its own repo)
 

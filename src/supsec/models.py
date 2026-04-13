@@ -1,8 +1,7 @@
 """Core data models for findings and scan results."""
 
-from enum import Enum
 from dataclasses import dataclass, field
-from pathlib import Path
+from enum import Enum
 
 
 class Severity(str, Enum):

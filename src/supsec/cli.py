@@ -9,7 +9,6 @@ Usage:
 """
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -29,9 +28,9 @@ console = Console()
 @app.command()
 def scan(
     target: Path = typer.Argument(".", help="Directory or file to scan"),
-    format: str = typer.Option("console", "--format", "-f", help="Output format: console, sarif, markdown"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Write report to file"),
-    scanners: Optional[str] = typer.Option(None, "--scanners", "-s", help="Comma-separated scanner names"),
+    output_format: str = typer.Option("console", "--fmt", "-f", help="Output format: console, sarif, markdown"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Write report to file"),
+    scanners: str | None = typer.Option(None, "--scanners", "-s", help="Comma-separated scanner names"),
     fail_on: str = typer.Option("high", "--fail-on", help="Exit 1 if findings at this severity or above: critical, high, medium, low"),
 ) -> None:
     """Scan a directory for security issues."""
@@ -45,10 +44,9 @@ def scan(
     else:
         result = engine.scan(target)
 
-    # Select reporter
-    reporter_cls = REPORTERS.get(format)
+    reporter_cls = REPORTERS.get(output_format)
     if not reporter_cls:
-        console.print(f"[red]Unknown format: {format}. Available: {', '.join(REPORTERS)}[/red]")
+        console.print(f"[red]Unknown format: {output_format}. Available: {', '.join(REPORTERS)}[/red]")
         raise typer.Exit(1)
 
     reporter = reporter_cls()
@@ -58,13 +56,11 @@ def scan(
         reporter.write(result, output)
         console.print(f"Report written to {output}")
     else:
-        if format == "console":
-            # ConsoleReporter already uses rich; just print the captured text
+        if output_format == "console":
             print(report_text)
         else:
             print(report_text)
 
-    # Exit code logic
     severity_map = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
     threshold = severity_map.get(fail_on.lower(), 4)
     max_severity = max((f.severity.weight for f in result.findings), default=0)

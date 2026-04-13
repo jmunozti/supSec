@@ -1,28 +1,39 @@
-[tool.poetry]
+[project]
 name = "supsec"
 version = "0.1.0"
 description = "DevSecOps scanner — finds security issues in Dockerfiles, CI configs, Terraform, and source code"
-authors = ["Jorge Munoz"]
+authors = [{ name = "Jorge Munoz" }]
 readme = "README.md"
-packages = [{ include = "supsec", from = "src" }]
+requires-python = ">=3.12"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-typer = "^0.15.0"
-rich = "^13.9.0"
-pyyaml = "^6.0"
-pydantic = "^2.9.0"
+dependencies = [
+    "typer>=0.15.0",
+    "rich>=13.9.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.9.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.0"
-ruff = "^0.7.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.7.0",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 supsec = "supsec.cli:app"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.7.0",
+]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/supsec"]
 
 [tool.ruff]
 line-length = 100
@@ -30,6 +41,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501", "B008", "UP042"]  # E501: formatter handles; B008: Typer pattern; UP042: keep str+Enum for readability
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

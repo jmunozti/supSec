@@ -6,8 +6,8 @@ import pytest
 
 from supsec.models import Finding, ScanResult, Severity
 from supsec.reporters.console import ConsoleReporter
-from supsec.reporters.sarif import SARIFReporter
 from supsec.reporters.markdown import MarkdownReporter
+from supsec.reporters.sarif import SARIFReporter
 
 
 @pytest.fixture
