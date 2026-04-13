@@ -5,6 +5,21 @@ from pathlib import Path
 
 from supsec.models import Finding
 
+# Directories that should never be scanned regardless of config
+ALWAYS_SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".mypy_cache",
+    "dist",
+    "build",
+    ".egg-info",
+}
+
 
 class BaseScanner(ABC):
     """Every scanner must implement scan() and declare which files it handles."""
@@ -30,6 +45,10 @@ class BaseScanner(ABC):
                 findings.extend(self.scan(root))
             return findings
         for p in sorted(root.rglob("*")):
-            if p.is_file() and self.accepts(p):
+            if not p.is_file():
+                continue
+            if any(skip in p.parts for skip in ALWAYS_SKIP_DIRS):
+                continue
+            if self.accepts(p):
                 findings.extend(self.scan(p))
         return findings

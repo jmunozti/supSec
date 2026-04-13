@@ -1,0 +1,16 @@
+# supSec config for scanning itself.
+# When supSec scans its own repo, it needs to exclude:
+#   - test files (contain intentional secrets/patterns for testing the scanners)
+#   - scanner source (contains detection patterns that look like findings)
+#   - vulnerable examples (intentionally broken — that's the demo)
+#   - generated/binary files
+ignore_paths:
+  - examples/vulnerable/
+  - tests/
+  - src/supsec/scanners/
+  - src/supsec/rules/
+  - src/supsec/fixer.py
+  - "*.pyc"
+  - "*.png"
+  - "*.sample"
+  - uv.lock
